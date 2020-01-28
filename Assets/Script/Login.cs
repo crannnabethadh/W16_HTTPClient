@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -24,7 +23,7 @@ public class Login : MonoBehaviour
 
     public void OnLoginButtonClicked()
     {
-        StartCoroutine(TryLogin());
+        TryLogin();
     }
 
     private void GetToken()
@@ -46,7 +45,7 @@ public class Login : MonoBehaviour
 
         while (!httpClient.isDone)
         {
-            Task.Delay(10);
+            Task.Delay(1);
         }
 
         if (httpClient.isNetworkError || httpClient.isHttpError)
@@ -59,16 +58,16 @@ public class Login : MonoBehaviour
             AuthorizationToken authToken = JsonUtility.FromJson<AuthorizationToken>(jsonResponse);
             gameManager.Token = authToken.access_token;
         }
-
         httpClient.Dispose();
     }
 
-    private IEnumerator TryLogin()
+    private void TryLogin()
     {
         // The Content-Type header will be set to application/x-www-form-urlencoded by default.
         if (string.IsNullOrEmpty(gameManager.Token))
         {
             GetToken();  // Blocking
+            // TODO: Show waiting spinner
         }
 
         UnityWebRequest httpClient = new UnityWebRequest(httpServerAddress + "/api/Account/UserId", "GET");
@@ -78,7 +77,12 @@ public class Login : MonoBehaviour
 
         httpClient.downloadHandler = new DownloadHandlerBuffer();
 
-        yield return httpClient.SendWebRequest();
+        httpClient.SendWebRequest();
+
+        while (!httpClient.isDone)
+        {
+            Task.Delay(1);
+        }
 
         if (httpClient.isNetworkError || httpClient.isHttpError)
         {
@@ -86,8 +90,6 @@ public class Login : MonoBehaviour
         }
         else
         {
-            //string jsonResponse = httpClient.downloadHandler.text;
-            //gameManager.PlayerId = JsonUtility.FromJson<string>(jsonResponse);
             gameManager.PlayerId = httpClient.downloadHandler.text;
             messageBoardText.text += "\nWelcome " + gameManager.PlayerId + ". You are logged in!";
             loginButton.interactable = false;
@@ -95,23 +97,27 @@ public class Login : MonoBehaviour
         }
 
         httpClient.Dispose();
-        
     }
 
     public void OnLogoutButtonClicked()
     {
-        StartCoroutine(TryLogout());
+        TryLogout();
     }
 
-    private IEnumerator TryLogout()
+    private void TryLogout()
     {
         // The Content-Type header will be set to application/x-www-form-urlencoded by default.
         UnityWebRequest httpClient = new UnityWebRequest(httpServerAddress + "/api/Account/Logout", "POST");
 
         httpClient.SetRequestHeader("Authorization", "bearer " + gameManager.Token);
 
-        yield return httpClient.SendWebRequest();  // Return control to LoginButtonClickedAPI since web request returns
-        
+        httpClient.SendWebRequest();  // Return control to LoginButtonClickedAPI since web request returns
+
+        while (!httpClient.isDone)
+        {
+            Task.Delay(1);
+        }
+
         if (httpClient.isNetworkError || httpClient.isHttpError)
         {
             Debug.Log(httpClient.error);

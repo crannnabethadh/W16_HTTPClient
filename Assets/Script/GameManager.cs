@@ -1,10 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private const string httpserver = "https://clickycrateswebapi.azurewebsites.net";
+    //private const string httpserver = "https://clickycrateswebapi.azurewebsites.net";
+    private const string httpServer = "https://localhost:44363";
+    public string GetHttpServer()
+    {
+        return httpServer;
+    }
 
     private string _token;
     public string Token
@@ -19,12 +22,4 @@ public class GameManager : MonoBehaviour
         get { return _playerId; }
         set { _playerId = value; }
     }
-
-
-
-    public string GetHttpServer()
-    {
-        return httpserver;
-    }
-
 }
